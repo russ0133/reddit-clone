@@ -10,6 +10,7 @@ import { createClient } from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import { MyContext } from "./types";
+import { HelloResolver } from "./api/resolvers/hello";
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig);
@@ -46,7 +47,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [PostResolver, UserResolver],
+      resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
     context: ({ req, res }): MyContext => ({ em: em, req, res }),
