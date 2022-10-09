@@ -15,7 +15,10 @@ const main = async () => {
   const app = express();
 
   const apolloServer = new ApolloServer({
-    schema: await buildSchema({ resolvers: [PostResolver, UserResolver], validate: false }),
+    schema: await buildSchema({
+      resolvers: [PostResolver, UserResolver],
+      validate: false,
+    }),
     context: () => ({ em: em }),
   });
 
@@ -25,6 +28,33 @@ const main = async () => {
   app.listen(4000, () => {
     console.log("server started on localhost:4000");
   });
+
+  function updateClickCount() {
+    let clicks = 0;
+    return function () {
+      clicks++;
+      console.log(clicks);
+    };
+  }
+  let click = updateClickCount();
+  click(); // 1
+  click(); // 2
+
+  const updateClickArrow = (() => {
+    let qtd = 0;
+    const addQtd = () => {
+      qtd++;
+    };
+    const getQtd = () => {
+      return console.log("qtd: ", qtd);
+    };
+    return { addQtd, getQtd };
+  })();
+
+  updateClickArrow.addQtd();
+  updateClickArrow.getQtd(); // 1
+  updateClickArrow.addQtd();
+  updateClickArrow.getQtd(); // 2
 };
 
 main().catch((err) => console.error(err));
