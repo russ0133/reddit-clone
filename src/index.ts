@@ -6,6 +6,10 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { PostResolver } from "./api/resolvers/post";
 import { UserResolver } from "./api/resolvers/user";
+import { createClient } from "redis";
+import session from "express-session";
+import connectRedis from "connect-redis";
+import { MyContext } from "./types";
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig);
@@ -14,47 +18,49 @@ const main = async () => {
 
   const app = express();
 
+  const RedisStore = connectRedis(session);
+  const redisClient = createClient({ legacyMode: true });
+
+  try {
+    redisClient.connect();
+    console.log("Connected to Redis");
+  } catch (err) {
+    console.log(err);
+  }
+  app.set("trust proxy", true);
+  app.use(
+    session({
+      name: "qid",
+      store: new RedisStore({ client: redisClient }),
+      saveUninitialized: false,
+      secret: "qkfaksoivmako",
+      resave: false,
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      },
+    })
+  );
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
-    context: () => ({ em: em }),
+    context: ({ req, res }): MyContext => ({ em: em, req, res }),
   });
 
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({
+    app,
+    cors: { origin: "https://studio.apollographql.com", credentials: true },
+  });
 
   app.listen(4000, () => {
     console.log("server started on localhost:4000");
   });
-
-  function updateClickCount() {
-    let clicks = 0;
-    return function () {
-      clicks++;
-      console.log(clicks);
-    };
-  }
-  let click = updateClickCount();
-  click(); // 1
-  click(); // 2
-
-  const updateClickArrow = (() => {
-    let qtd = 0;
-    const addQtd = () => {
-      qtd++;
-    };
-    const getQtd = () => {
-      return console.log("qtd: ", qtd);
-    };
-    return { addQtd, getQtd };
-  })();
-
-  updateClickArrow.addQtd();
-  updateClickArrow.getQtd(); // 1
-  updateClickArrow.addQtd();
-  updateClickArrow.getQtd(); // 2
 };
 
 main().catch((err) => console.error(err));

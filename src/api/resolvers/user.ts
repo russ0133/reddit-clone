@@ -35,7 +35,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     const user = await em.findOne(User, { username: options.username });
     if (!user)
@@ -45,6 +45,10 @@ export class UserResolver {
 
     const valid = await argon2.verify(user.password, options.password);
     if (!valid) return { errors: [{ field: "password", message: "incorrect password" }] };
+
+    req.session.userId = user.id;
+
+    req.session.save();
 
     return { user };
   }
