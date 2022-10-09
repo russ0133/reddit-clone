@@ -11,6 +11,8 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import { MyContext } from "./types";
 import { HelloResolver } from "./api/resolvers/hello";
+import { ApolloSandbox } from "@apollo/sandbox";
+const path = require("path");
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig);
@@ -28,7 +30,6 @@ const main = async () => {
   } catch (err) {
     console.log(err);
   }
-  app.set("trust proxy", true);
   app.use(
     session({
       name: "qid",
@@ -38,9 +39,8 @@ const main = async () => {
       resave: false,
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        httpOnly: false,
+        secure: false,
       },
     })
   );
@@ -56,7 +56,7 @@ const main = async () => {
   await apolloServer.start();
   apolloServer.applyMiddleware({
     app,
-    cors: { origin: "https://studio.apollographql.com", credentials: true },
+    cors: { origin: "http://localhost:3000" },
   });
 
   app.listen(4000, () => {

@@ -58,6 +58,7 @@ export class UserResolver {
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em }: MyContext
   ): Promise<UserResponse> {
+    console.log("tried register");
     if (options.username.length <= 2)
       return {
         errors: [
@@ -96,6 +97,8 @@ export class UserResolver {
           ],
         };
     }
+
+    console.log("Tried registering: ", options);
 
     return { user };
   }

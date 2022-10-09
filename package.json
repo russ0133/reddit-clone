@@ -18,6 +18,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
+    "@apollo/sandbox": "^0.3.0",
     "@mikro-orm/cli": "^5.4.2",
     "@mikro-orm/core": "^5.4.2",
     "@mikro-orm/migrations": "^5.4.2",
